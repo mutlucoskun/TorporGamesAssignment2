@@ -40,9 +40,12 @@ public class UIManager : MonoBehaviour
     
     #endregion
 
+    public int buttonsState;
+    public int successCount;
     private void Start()
     {
-        SetButtonState(1);
+        DataManager.Instance.LoadGameState();
+        SetButtons(buttonsState);
     }
     
     public void RollDice()
@@ -53,40 +56,51 @@ public class UIManager : MonoBehaviour
        int social =  PixelCrushers.DialogueSystem.DialogueLua.GetVariable("PlayerStats.Social").asInt;
        int mental =  PixelCrushers.DialogueSystem.DialogueLua.GetVariable("PlayerStats.Mental").asInt;
        int rollCount = (physical + social + mental);
-       int successCount = 0;
+       successCount = 0;
        bool success = false;
-
+        
        for (int i = 0; i < rollCount; i++)
        {
            int roll = Random.Range(0, 10);
            if (roll >= successCap ) successCount++;
        }
        success = (successCount >= difficulty);
-       
-       txtDifficulty.text = "Difficulty: " + difficulty;
-       txtPhysical.text = "Physical: " + physical;
-       txtSocial.text = "Social: " + social;
-       txtMental.text = "Mental: " + mental;
-       txtRollCount.text = "Total Roll: " + rollCount + "d10";
-       txtSuccessCount.text = "Success Count: " + successCount;
-       txtResult.text = (success) ? "Result: Success" : "Result: Failed";
-
        PixelCrushers.DialogueSystem.DialogueLua.SetVariable("Roll.Success", success);
-       
        rollInfoView.SetActive(true);
        SetButtons(3);
+       
+       DataManager.Instance.SaveGameState();
+       
+       UpdateRollView();
+    }
+    
+    private void UpdateRollView()
+    {
+        int difficulty =  DataManager.Instance.saveData.difficulty;
+        int physical =  PixelCrushers.DialogueSystem.DialogueLua.GetVariable("PlayerStats.Physical").asInt;
+        int social =  PixelCrushers.DialogueSystem.DialogueLua.GetVariable("PlayerStats.Social").asInt;
+        int mental =  PixelCrushers.DialogueSystem.DialogueLua.GetVariable("PlayerStats.Mental").asInt;
+        int rollCount = (physical + social + mental);
+        
+        txtDifficulty.text = "Difficulty: " + difficulty;
+        txtPhysical.text = "Physical: " + physical;
+        txtSocial.text = "Social: " + social;
+        txtMental.text = "Mental: " + mental;
+        txtRollCount.text = "Total Roll: " + rollCount + "d10";
+        txtSuccessCount.text = "Success Count: " + DataManager.Instance.saveData.successCount;
+        txtResult.text = (DataManager.Instance.saveData.success) ? "Result: Success" : "Result: Failed";
     }
 
     public void EndRoll()
     {
         rollInfoView.SetActive(false);
+        DataManager.Instance.SaveGameState();
     }
 
     public void SetButtons(int val)
     {
-        button1.gameObject.SetActive(false);
-        button2.gameObject.SetActive(false);
-        button3.gameObject.SetActive(false);
+        buttonsState = val;
+        HideAllButtons();
         switch (val)
         {
             case 1:
@@ -96,12 +110,30 @@ public class UIManager : MonoBehaviour
                 button2.gameObject.SetActive(true);
                 break;
             case 3:
+                rollInfoView.SetActive(true);
+                UpdateRollView();
                 button3.gameObject.SetActive(true);
                 break;
-            case 0:
-                EndRoll();
-                break;
         }
+        
+        DataManager.Instance.SaveGameState();
+    }
+
+    public void HideAllButtons()
+    {
+        button1.gameObject.SetActive(false);
+        button2.gameObject.SetActive(false);
+        button3.gameObject.SetActive(false);
+        EndRoll();
+    }
+
+    public void QuitGame()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
     public void SetButtonState(double val)
     {
