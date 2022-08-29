@@ -40,7 +40,6 @@ public class UIManager : MonoBehaviour
     
     #endregion
 
-
     private void Start()
     {
         SetButtonState(1);
@@ -69,7 +68,8 @@ public class UIManager : MonoBehaviour
        txtSocial.text = "Social: " + social;
        txtMental.text = "Mental: " + mental;
        txtRollCount.text = "Total Roll: " + rollCount + "d10";
-       txtResult.text = (success) ? "Result: Sucess" : "Result: Failed";
+       txtSuccessCount.text = "Success Count: " + successCount;
+       txtResult.text = (success) ? "Result: Success" : "Result: Failed";
 
        PixelCrushers.DialogueSystem.DialogueLua.SetVariable("Roll.Success", success);
        
